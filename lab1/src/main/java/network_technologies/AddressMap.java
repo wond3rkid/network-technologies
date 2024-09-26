@@ -16,7 +16,7 @@ public class AddressMap {
 
     public void printAddresses() {
         for (Map.Entry<InetSocketAddress, Long> entry : addresses.entrySet()) {
-            System.out.println(STR."\{entry.getKey()}: \{entry.getValue()}");
+            System.out.printf("%s: %s\n", entry.getKey(), entry.getValue());
         }
     }
 
