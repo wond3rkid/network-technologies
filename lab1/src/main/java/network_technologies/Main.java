@@ -17,5 +17,10 @@ public class Main {
             // logger
             return;
         }
+        AddressMap addressMap = new AddressMap();
+        Thread receiver = new Thread(() -> new Receiver(address, addressMap));
+        receiver.start();
+        Thread sender = new Thread(() -> new Sender(address));
+        sender.start();
     }
 }
