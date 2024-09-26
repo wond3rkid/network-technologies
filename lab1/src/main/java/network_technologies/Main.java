@@ -4,8 +4,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
+import static network_technologies.Config.*;
+
 public class Main {
-    public static final int PORT = 8088;
+
 
     public void main(String[] args) {
         InetSocketAddress address;
