@@ -20,6 +20,7 @@ public class Client implements Runnable {
         this.serverPort = serverPort;
         this.path = path;
     }
+    // в клиенте не должно быть селектора сервер у нас один и селектор только в сервере
 
     @Override
     public void run() {
