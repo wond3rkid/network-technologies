@@ -40,6 +40,7 @@ public class Receiver implements Runnable {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     multicastReceiver.receive(receivePacket);
+                    LOGGER.info("{}", receivePacket.getData());
                     addressMap.add(receivePacket.getSocketAddress(), System.currentTimeMillis());
                 } catch (SocketTimeoutException e) {
                     LOGGER.error("Socket timed out");
