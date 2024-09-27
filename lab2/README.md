@@ -20,6 +20,13 @@ _Баллов за задачу: 2._
 ### Логика работы программы
 Файл не более 4096байт в UTF-8
 
+
+Запуск программы
+
+```textmate
+java Main <String ip><int port><String path>
+```
+
 ```java
 public Server(int port);
 public Client(String filePath, String serverIp, int serverPort);

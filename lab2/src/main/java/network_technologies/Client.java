@@ -1,6 +1,6 @@
 package network_technologies;
 
-public class Client {
+public class Client implements Runnable {
     private final String serverIp;
     private final int serverPort;
     private final String path;
@@ -10,4 +10,10 @@ public class Client {
         this.serverPort = serverPort;
         this.path = path;
     }
+
+    @Override
+    public void run() {
+
+    }
+
 }

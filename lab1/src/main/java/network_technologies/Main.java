@@ -16,7 +16,7 @@ import static network_technologies.Config.*;
 public class Main {
     private static final Logger LOGGER = LogManager.getLogger("MAIN");
 
-    public static void main() {
+    public static void main(String[] args) {
         InetSocketAddress address;
         try {
             address = new InetSocketAddress(InetAddress.getByName("224.0.0.1"), PORT);
