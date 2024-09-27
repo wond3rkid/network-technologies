@@ -40,6 +40,5 @@ public class Main {
         serverThread.start();
         Thread clientThread = new Thread(client);
         clientThread.start();
-
     }
 }
