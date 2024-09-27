@@ -16,22 +16,30 @@ public class Main {
 
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd;
-
+        String ip, path;
+        int port;
         try {
             cmd = parser.parse(options, args);
-
-            String ip = cmd.getOptionValue("ip");
-            int port = Integer.parseInt(cmd.getOptionValue("port"));
-            String path = cmd.getOptionValue("path");
+            ip = cmd.getOptionValue("ip");
+            port = Integer.parseInt(cmd.getOptionValue("port"));
+            path = cmd.getOptionValue("path");
 
             LOGGER.info("ip:port {}:{}", ip, port);
             LOGGER.info("path:{}", path);
         } catch (ParseException e) {
-            LOGGER.error("Error parsing command line arguments: {}",e.getMessage());
-            System.exit(1);
+            LOGGER.error("Error parsing command line arguments: {}", e.getMessage());
+            return;
         } catch (NumberFormatException e) {
             LOGGER.error("Port must be an integer: {}", e.getMessage());
-            System.exit(1);
+            return;
         }
+        LOGGER.info("Starting threads for client and server");
+        Client client = new Client(ip, port, path);
+        Server server = new Server(port);
+        Thread serverThread = new Thread(server);
+        serverThread.start();
+        Thread clientThread = new Thread(client);
+        clientThread.start();
+
     }
 }
