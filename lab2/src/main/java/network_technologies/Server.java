@@ -38,6 +38,7 @@ public class Server implements Runnable {
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
             LOGGER.info("Server is listening on port: {}", PORT);
             latch.countDown();
+            // TODO нормальный цикл
             while (true) {
                 selector.select();
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
@@ -46,7 +47,7 @@ public class Server implements Runnable {
                     SelectionKey key = iterator.next();
                     iterator.remove();
                     if (key.isAcceptable()) {
-                        handleAcceptable(key);
+                        handleAcceptable();
                     } else if (key.isReadable()) {
                         handleReadable(key);
                     }
@@ -64,7 +65,7 @@ public class Server implements Runnable {
         }
     }
 
-    private void handleAcceptable(SelectionKey key) throws IOException {
+    private void handleAcceptable() throws IOException {
         SocketChannel socketChannel = serverSocketChannel.accept();
         socketChannel.configureBlocking(false);
         socketChannel.register(selector, SelectionKey.OP_READ);

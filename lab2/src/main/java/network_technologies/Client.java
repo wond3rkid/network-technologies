@@ -42,9 +42,4 @@ public class Client implements Runnable {
         socketChannel.finishConnect();
         LOGGER.info("Client connected to server");
     }
-
-    private void finishServerConnection() throws IOException {
-
-    }
-
 }
