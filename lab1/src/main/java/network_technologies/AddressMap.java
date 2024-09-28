@@ -31,11 +31,11 @@ public class AddressMap {
      * Add a socket address to the map with the current time.
      *
      * @param socketAddress the address to add
-     * @param l             the current time (timestamp)
+     * @param time             the current time (timestamp)
      */
-    public void add(SocketAddress socketAddress, long l) {
-        LOGGER.info("We adding: {} - {}", socketAddress, l);
-        addresses.put(socketAddress, l);
+    public void add(SocketAddress socketAddress, long time) {
+        LOGGER.info("We adding: {} - {}", socketAddress, time);
+        addresses.put(socketAddress, time);
     }
 
     /**
