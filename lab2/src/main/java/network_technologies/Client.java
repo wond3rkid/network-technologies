@@ -14,6 +14,7 @@ public class Client implements Runnable {
     private final int serverPort;
     private final String path;
     private final CountDownLatch latch;
+    private SocketChannel socketChannel;
 
     public Client(String serverIp, int serverPort, String path, CountDownLatch latch) {
         this.serverIp = serverIp;
@@ -28,17 +29,18 @@ public class Client implements Runnable {
             latch.await();
             LOGGER.info("Client started to run");
             connectToServer();
-        } catch (Exception e) {
+        } catch (IOException | InterruptedException e) {
             LOGGER.error(e);
         }
     }
 
-    // TODO hash map ???
     private void connectToServer() throws IOException {
-        try (SocketChannel socketChannel = SocketChannel.open()) {
-            socketChannel.connect(new InetSocketAddress(serverIp, serverPort));
-            socketChannel.configureBlocking(false);
-        }
+        LOGGER.info("Connecting to {}:{}", serverIp, serverPort);
+        socketChannel = SocketChannel.open();
+        socketChannel.connect(new InetSocketAddress(serverIp, serverPort));
+        socketChannel.configureBlocking(false);
+        socketChannel.finishConnect();
+        LOGGER.info("Client connected to server");
     }
 
     private void finishServerConnection() throws IOException {

@@ -68,10 +68,6 @@ public Client(String filePath, String serverIp, int serverPort);
 Размер сообщения: 32 байта для имени, 4 байта для длины и длина байтов для содержимого
 Имя в кодировке UTF-8???? 
 ```thymeleaftemplatesfragmentexpressions
-    TODO: utf8 ????
-    selector??/?
-```
-```thymeleaftemplatesfragmentexpressions
 <path_name><length><data>
 <32 byte><4 byte><length byte>
 ```
