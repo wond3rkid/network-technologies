@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.util.concurrent.CountDownLatch;
 
 public class Server implements Runnable {
     private final Logger LOGGER = LogManager.getLogger("SERVER");
@@ -17,9 +18,11 @@ public class Server implements Runnable {
     ServerSocketChannel serverSocketChannel;
     Selector selector;
     RandomAccessFile file;
+    private final CountDownLatch latch;
 
-    public Server(int port) {
+    public Server(int port, CountDownLatch latch) {
         PORT = port;
+        this.latch = latch;
     }
 
     @Override
@@ -31,6 +34,7 @@ public class Server implements Runnable {
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
             LOGGER.info("Server is listening on port: " + PORT);
+            latch.countDown();
             // TODO infinity cycle
             while (true) {
 

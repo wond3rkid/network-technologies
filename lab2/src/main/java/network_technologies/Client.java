@@ -5,27 +5,29 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.CountDownLatch;
 
 public class Client implements Runnable {
     private final Logger LOGGER = LogManager.getLogger("CLIENT");
     private final String serverIp;
     private final int serverPort;
     private final String path;
+    private final CountDownLatch latch;
 
-    public Client(String serverIp, int serverPort, String path) {
+    public Client(String serverIp, int serverPort, String path, CountDownLatch latch) {
         this.serverIp = serverIp;
         this.serverPort = serverPort;
         this.path = path;
+        this.latch = latch;
     }
-    // в клиенте не должно быть селектора сервер у нас один и селектор только в сервере
 
     @Override
     public void run() {
         try {
-            // TODO infinity cycle
+            latch.await();
+            LOGGER.info("Client started to run");
+            connectToServer();
         } catch (Exception e) {
             LOGGER.error(e);
         }
@@ -33,9 +35,10 @@ public class Client implements Runnable {
 
     // TODO hash map ???
     private void connectToServer() throws IOException {
-        SocketChannel socketChannel = SocketChannel.open();
-        socketChannel.connect(new InetSocketAddress(serverIp, serverPort));
-        socketChannel.configureBlocking(false);
+        try (SocketChannel socketChannel = SocketChannel.open()) {
+            socketChannel.connect(new InetSocketAddress(serverIp, serverPort));
+            socketChannel.configureBlocking(false);
+        }
     }
 
     private void finishServerConnection() throws IOException {

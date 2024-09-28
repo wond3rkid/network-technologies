@@ -4,6 +4,10 @@ import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class Main {
     private final static Logger LOGGER = LogManager.getLogger("MAIN");
 
@@ -34,11 +38,12 @@ public class Main {
             return;
         }
         LOGGER.info("Starting threads for client and server");
-        Client client = new Client(ip, port, path);
-        Server server = new Server(port);
-        Thread serverThread = new Thread(server);
-        serverThread.start();
-        Thread clientThread = new Thread(client);
-        clientThread.start();
+        CountDownLatch latch = new CountDownLatch(1);
+        Client client = new Client(ip, port, path, latch);
+        Server server = new Server(port, latch);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        executor.execute(server);
+        executor.execute(client);
+        executor.shutdown();
     }
 }
