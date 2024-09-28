@@ -6,10 +6,15 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -73,5 +78,54 @@ public class Server implements Runnable {
     }
 
     private void handleReadable(SelectionKey key) {
+        SocketChannel channel = (SocketChannel) key.channel();
+
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(20);
+            int bytesRead = channel.read(buffer);
+
+            if (bytesRead == -1) {
+                LOGGER.info("Client disconnected from: {}", channel.getRemoteAddress());
+                channel.close();
+                return;
+            }
+
+            buffer.flip();
+
+            byte[] fileNameBytes = new byte[16];
+            buffer.get(fileNameBytes);
+            String fileName = new String(fileNameBytes, StandardCharsets.UTF_8).trim();
+            int fileSize = buffer.getInt();
+
+            LOGGER.info("Received file: {} (size: {} bytes)", fileName, fileSize);
+
+            ByteBuffer fileBuffer = ByteBuffer.allocate(fileSize);
+            int totalBytesRead = 0;
+
+            while (totalBytesRead < fileSize) {
+                int bytesReadFromFile = channel.read(fileBuffer);
+                if (bytesReadFromFile == -1) {
+                    LOGGER.info("Client disconnected while reading file data: {}", channel.getRemoteAddress());
+                    channel.close();
+                    return;
+                }
+                totalBytesRead += bytesReadFromFile;
+                LOGGER.info("Read {} bytes from channel; Total bytes read: {}", bytesReadFromFile, totalBytesRead);
+            }
+
+            fileBuffer.flip();
+            Path outputPath = Paths.get("received_" + fileName);
+            Files.write(outputPath, fileBuffer.array());
+            LOGGER.info("File {} has been saved successfully", outputPath.toString());
+
+        } catch (IOException e) {
+            LOGGER.error("Error handling channel: {}", e.getMessage());
+            try {
+                channel.close();
+            } catch (IOException ex) {
+                LOGGER.error("Error closing channel: {}", ex.getMessage());
+            }
+        }
     }
+
 }

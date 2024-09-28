@@ -3,6 +3,7 @@ package network_technologies;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -63,6 +64,37 @@ public class Client implements Runnable {
         long bufferSize = 16 + 4 + fileSize;
         LOGGER.info("buffer size : {} bytes", bufferSize);
         ByteBuffer buffer = ByteBuffer.allocate((int) bufferSize);
-        LOGGER.info(buffer.capacity());
+
+        byte[] fileNameBytes = fileName.getBytes(StandardCharsets.UTF_8);
+        if (fileNameBytes.length > 16) {
+            throw new IllegalArgumentException("File name exceeds maximum length of 16 bytes");
+        }
+        buffer.put(fileNameBytes);
+        for (int i = fileNameBytes.length; i < 16; i++) {
+            buffer.put((byte) 0);
+        }
+        buffer.putInt((int) fileSize);
+
+        try {
+            byte[] fileData = Files.readAllBytes(Paths.get(filePath));
+            buffer.put(fileData);
+        } catch (IOException e) {
+            LOGGER.error("Error reading file data: {}", e.getMessage());
+            return;
+        }
+        buffer.flip();
+
+        try {
+            int bytesWrite = socketChannel.write(buffer);
+            LOGGER.info("Message sent successfully | bytes write : {}", bytesWrite);
+        } catch (IOException e) {
+            LOGGER.error("Error sending message: {}", e.getMessage());
+        } finally {
+            try {
+                socketChannel.close();
+            } catch (IOException e) {
+                LOGGER.error("Error closing socket: {}", e.getMessage());
+            }
+        }
     }
 }
