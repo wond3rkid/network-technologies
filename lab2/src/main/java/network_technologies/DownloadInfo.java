@@ -45,6 +45,6 @@ public class DownloadInfo {
     public void printStatus() throws IOException {
         long speed = getSpeed();
         // todo ?????
-        LOGGER.info("Сlient: {}, Speed: {} bytes/s, Total bytes read: {}, File size: {}", socketChannel.getRemoteAddress().toString(), speed, totalBytesRead.get(), totalBytesRead.get());
+        LOGGER.info("Сlient: {}, Speed: {} bytes/s, Total bytes read: {}", socketChannel.getRemoteAddress().toString(), speed, totalBytesRead.get());
     }
 }

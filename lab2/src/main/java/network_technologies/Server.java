@@ -91,6 +91,7 @@ public class Server implements Runnable {
             channel.close();
             return;
         }
+        tracker.addBytesRead(channel, bytesRead);
         buffer.flip();
         byte[] nameBytes = new byte[16];
         buffer.get(nameBytes);
