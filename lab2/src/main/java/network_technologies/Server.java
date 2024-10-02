@@ -26,6 +26,8 @@ public class Server implements Runnable {
     private Selector selector;
     private final CountDownLatch latch;
 
+    // todo add piece manager here to correct receive pieces from some clients on one server and properly answering on their mssges
+
     public Server(int port, CountDownLatch latch) {
         this.PORT = port;
         this.latch = latch;
@@ -127,7 +129,6 @@ public class Server implements Runnable {
             Files.write(outputPath, fileBuffer.array());
 
             LOGGER.info("File {} has been saved successfully", outputPath.toString());
-            // Проверьте размер и подтвердите успешность операции
             if (totalBytesRead == fileSize) {
                 channel.write(ByteBuffer.wrap("File received successfully".getBytes(StandardCharsets.UTF_8)));
             } else {
