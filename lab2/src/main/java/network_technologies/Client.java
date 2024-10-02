@@ -58,7 +58,7 @@ public class Client implements Runnable {
         try {
             latch.await();
             LOGGER.info("Client started to run");
-            while (pieceManager.isAllPiecesSent()) {
+            while (!pieceManager.isAllPiecesSent()) {
                 switch (clientStatus) {
                     case NO_CONNECTION -> connectToServer();
                     case CONNECTED -> sendInitMessage();
@@ -66,11 +66,9 @@ public class Client implements Runnable {
                 }
             }
         } catch (IOException | InterruptedException e) {
+            clientStatus = ClientStatus.NO_CONNECTION;
             LOGGER.error(e);
         }
-    }
-
-    private void sendPiece() {
     }
 
     private void connectToServer() throws IOException {
@@ -83,7 +81,7 @@ public class Client implements Runnable {
         LOGGER.info("Client connected to server");
     }
 
-    private void sendInitMessage() {
+    private void sendInitMessage() throws IOException {
         long bufferSize = 16 + 4;
         LOGGER.info("buffer size : {} bytes", bufferSize);
         ByteBuffer buffer = ByteBuffer.allocate((int) bufferSize);
@@ -98,19 +96,12 @@ public class Client implements Runnable {
         }
         buffer.putInt((int) fileSize);
         buffer.flip();
-
-        try {
-            int bytesWrite = socketChannel.write(buffer);
-            LOGGER.info("Message sent successfully | bytes write : {}", bytesWrite);
-            clientStatus = ClientStatus.SENT_INIT_MESSAGE;
-        } catch (IOException e) {
-            LOGGER.error("Error sending message: {}", e.getMessage());
-        } finally {
-            try {
-                socketChannel.close();
-            } catch (IOException e) {
-                LOGGER.error("Error closing socket: {}", e.getMessage());
-            }
-        }
+        int bytesWrite = socketChannel.write(buffer);
+        LOGGER.info("Message sent successfully | bytes write : {}", bytesWrite);
+        clientStatus = ClientStatus.SENT_INIT_MESSAGE;
     }
+
+    private void sendPiece() {
+    }
+
 }

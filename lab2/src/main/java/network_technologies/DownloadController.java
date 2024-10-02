@@ -1,12 +1,13 @@
 package network_technologies;
 
+import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 public class DownloadController implements Runnable {
-    private static final Logger LOGGER = Logger.getLogger(DownloadController.class.getName());
+    private static final Logger LOGGER = Logger.getLogger("DownloadController");
     private final Map<SocketChannel, DownloadInfo> downloadInfos  = new ConcurrentHashMap<>();
     private final long INTERVAL = 3000;
 
@@ -28,7 +29,11 @@ public class DownloadController implements Runnable {
     public void run() {
         while (true) {
             for (DownloadInfo downloadInfo : downloadInfos.values()) {
-                downloadInfo.printStatus();
+                try {
+                    downloadInfo.printStatus();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
             try {
                 Thread.sleep(INTERVAL);

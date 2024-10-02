@@ -1,11 +1,14 @@
 package network_technologies;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
 
 public class DownloadInfo {
-    private static final Logger LOGGER = Logger.getLogger(DownloadInfo.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger("DownloadInfo");
     private final AtomicLong totalBytesRead;
     private final AtomicLong lastBytesRead;
     private final AtomicLong lastUpdateTime;
@@ -39,9 +42,9 @@ public class DownloadInfo {
         return totalBytesRead.get();
     }
 
-    public void printStatus() {
+    public void printStatus() throws IOException {
         long speed = getSpeed();
-        // todo
-        LOGGER.info("Client id: {}, Speed: {} bytes/s, Total bytes read: {}, File size: {}");
+        // todo ?????
+        LOGGER.info("Сlient: {}, Speed: {} bytes/s, Total bytes read: {}, File size: {}", socketChannel.getRemoteAddress().toString(), speed, totalBytesRead.get(), totalBytesRead.get());
     }
 }
