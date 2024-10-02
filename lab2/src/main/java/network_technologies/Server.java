@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -22,15 +21,23 @@ import java.util.concurrent.CountDownLatch;
 public class Server implements Runnable {
     private final Logger LOGGER = LogManager.getLogger("SERVER");
     private final int PORT;
-    private final String path = "resources/";
-    ServerSocketChannel serverSocketChannel;
-    Selector selector;
-    RandomAccessFile file;
+    private final String uploadsPath = "uploads/";
+    private ServerSocketChannel serverSocketChannel;
+    private Selector selector;
     private final CountDownLatch latch;
 
     public Server(int port, CountDownLatch latch) {
-        PORT = port;
+        this.PORT = port;
         this.latch = latch;
+        createUploadsDirectory();
+    }
+
+    private void createUploadsDirectory() {
+        try {
+            Files.createDirectories(Paths.get(uploadsPath));
+        } catch (IOException e) {
+            LOGGER.error("Failed to create uploads directory: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -43,9 +50,12 @@ public class Server implements Runnable {
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
             LOGGER.info("Server is listening on port: {}", PORT);
             latch.countDown();
-            // TODO нормальный цикл
+
             while (true) {
-                selector.select();
+                int readyChannels = selector.select(3000);
+
+                if (readyChannels == 0) continue;
+
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
                 Iterator<SelectionKey> iterator = selectedKeys.iterator();
                 while (iterator.hasNext()) {
@@ -59,14 +69,14 @@ public class Server implements Runnable {
                 }
             }
         } catch (IOException e) {
-            try {
-                selector.close();
-            } catch (IOException ex) {
-                LOGGER.error("Failed to close selector", ex);
-            }
             LOGGER.error("Failed from server selector", e);
         } finally {
-            //close resources
+            try {
+                if (selector != null) selector.close();
+                if (serverSocketChannel != null) serverSocketChannel.close();
+            } catch (IOException e) {
+                LOGGER.error("Error closing resources: {}", e.getMessage());
+            }
         }
     }
 
@@ -89,8 +99,8 @@ public class Server implements Runnable {
                 channel.close();
                 return;
             }
-
             buffer.flip();
+
 
             byte[] fileNameBytes = new byte[16];
             buffer.get(fileNameBytes);
@@ -98,7 +108,6 @@ public class Server implements Runnable {
             int fileSize = buffer.getInt();
 
             LOGGER.info("Received file: {} (size: {} bytes)", fileName, fileSize);
-
             ByteBuffer fileBuffer = ByteBuffer.allocate(fileSize);
             int totalBytesRead = 0;
 
@@ -114,9 +123,16 @@ public class Server implements Runnable {
             }
 
             fileBuffer.flip();
-            Path outputPath = Paths.get("received_" + fileName);
+            Path outputPath = Paths.get(uploadsPath + "received_" + fileName);
             Files.write(outputPath, fileBuffer.array());
+
             LOGGER.info("File {} has been saved successfully", outputPath.toString());
+            // Проверьте размер и подтвердите успешность операции
+            if (totalBytesRead == fileSize) {
+                channel.write(ByteBuffer.wrap("File received successfully".getBytes(StandardCharsets.UTF_8)));
+            } else {
+                channel.write(ByteBuffer.wrap("File size mismatch".getBytes(StandardCharsets.UTF_8)));
+            }
 
         } catch (IOException e) {
             LOGGER.error("Error handling channel: {}", e.getMessage());
@@ -127,5 +143,4 @@ public class Server implements Runnable {
             }
         }
     }
-
 }
