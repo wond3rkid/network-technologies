@@ -1,52 +1,47 @@
 package network_technologies;
 
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 public class DownloadInfo {
-    private final SocketChannel channel;
-    private long startTime;
-    private long lastCheckedTime;
-    private long bytesReceived;
-    private long bytesLastPeriod;
+    private static final Logger LOGGER = Logger.getLogger(DownloadInfo.class.getName());
+    private final AtomicLong totalBytesRead;
+    private final AtomicLong lastBytesRead;
+    private final AtomicLong lastUpdateTime;
+    private final SocketChannel socketChannel;
 
     public DownloadInfo(SocketChannel channel) {
-        this.channel = channel;
-        this.startTime = System.currentTimeMillis();
-        this.lastCheckedTime = startTime;
-        this.bytesReceived = 0;
-        this.bytesLastPeriod = 0;
+        socketChannel = channel;
+        totalBytesRead = new AtomicLong();
+        lastBytesRead = new AtomicLong();
+        lastUpdateTime = new AtomicLong(System.currentTimeMillis());
     }
 
-    public SocketChannel getChannel() {
-        return channel;
+    public void addBytesRead(long bytesRead) {
+        totalBytesRead.addAndGet(bytesRead);
+        lastBytesRead.addAndGet(bytesRead);
     }
 
-    public long getBytesReceived() {
-        return bytesReceived;
+    public long getSpeed() {
+        long currentTime = System.currentTimeMillis();
+        long elapsedTime = currentTime - lastUpdateTime.get();
+        if (elapsedTime <= 0) {
+            return 0;
+        }
+        long speed = lastBytesRead.get() * 1000 / elapsedTime;
+        lastBytesRead.set(0);
+        lastUpdateTime.set(currentTime);
+        return speed;
     }
 
-    public long getBytesLastPeriod() {
-        return bytesLastPeriod;
+    public long getTotalBytesRead() {
+        return totalBytesRead.get();
     }
 
-    public void addBytes(long bytes) {
-        bytesReceived += bytes;
-        bytesLastPeriod += bytes;
-    }
-
-    public void resetLastPeriod() {
-        bytesLastPeriod = 0;
-    }
-
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public long getLastCheckedTime() {
-        return lastCheckedTime;
-    }
-
-    public void updateLastCheckedTime() {
-        this.lastCheckedTime = System.currentTimeMillis();
+    public void printStatus() {
+        long speed = getSpeed();
+        // todo
+        LOGGER.info("Client id: {}, Speed: {} bytes/s, Total bytes read: {}, File size: {}");
     }
 }
