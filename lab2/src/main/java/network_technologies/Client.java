@@ -11,8 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+
 import java.util.concurrent.CountDownLatch;
 
 public class Client implements Runnable {
@@ -24,11 +23,12 @@ public class Client implements Runnable {
     private final String filePath;
     private String fileName;
     private long fileSize;
-    private int pieces;
-    private final int SIZE = 64 * 1024;
-    private final int LAST_SIZE;
+    private int PIECE_COUNT;
+    private final int PIECE_SIZE = 64 * 1024;
+    private final int LAST_PIECE_SIZE;
     private PieceManager pieceManager;
     private ClientStatus clientStatus;
+    private int INIT_BUFFER = 20;
 
     public Client(String serverIp, int serverPort, String path, CountDownLatch latch) {
         this.serverIp = serverIp;
@@ -45,12 +45,12 @@ public class Client implements Runnable {
             LOGGER.error("Error file handling: {}", e.getMessage());
         }
 
-        LAST_SIZE = (int) (fileSize % SIZE);
-        pieces = (int) (fileSize / SIZE) + (LAST_SIZE != 0 ? 1 : 0);
+        LAST_PIECE_SIZE = (int) (fileSize % PIECE_SIZE);
+        PIECE_COUNT = (int) (fileSize / PIECE_SIZE) + (LAST_PIECE_SIZE != 0 ? 1 : 0);
         LOGGER.info("ip: {} | port: {} | filename: {} | absolute path: {}",
                 serverIp, serverPort, fileName, fpath.toAbsolutePath());
-        LOGGER.info("file size: {} | pieces count : {} | piece size: {} | last piece size: {}", fileSize, pieces, SIZE, LAST_SIZE);
-        pieceManager = new PieceManager(pieces);
+        LOGGER.info("file size: {} | PIECE_COUNT count : {} | piece size: {} | last piece size: {}", fileSize, PIECE_COUNT, PIECE_SIZE, LAST_PIECE_SIZE);
+        pieceManager = new PieceManager(PIECE_COUNT);
     }
 
     @Override
@@ -82,10 +82,7 @@ public class Client implements Runnable {
     }
 
     private void sendInitMessage() throws IOException {
-        long bufferSize = 16 + 4;
-        LOGGER.info("buffer size : {} bytes", bufferSize);
-        ByteBuffer buffer = ByteBuffer.allocate((int) bufferSize);
-
+        ByteBuffer buffer = ByteBuffer.allocate(INIT_BUFFER);
         byte[] fileNameBytes = fileName.getBytes(StandardCharsets.UTF_8);
         if (fileNameBytes.length > 16) {
             throw new IllegalArgumentException("File name exceeds maximum length of 16 bytes");
@@ -99,9 +96,16 @@ public class Client implements Runnable {
         int bytesWrite = socketChannel.write(buffer);
         LOGGER.info("Message sent successfully | bytes write : {}", bytesWrite);
         clientStatus = ClientStatus.SENT_INIT_MESSAGE;
+
     }
 
+
     private void sendPiece() {
+        int piece = pieceManager.getPieceToSent();
+        long bufferSize = 4 + (piece == PIECE_COUNT - 1 ? LAST_PIECE_SIZE : PIECE_SIZE);
+        ByteBuffer buffer = ByteBuffer.allocate((int) bufferSize);
+        buffer.putInt((int) (bufferSize - 4));
+        // todo open file and get piece
     }
 
 }

@@ -1,21 +1,26 @@
 package network_technologies;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
 public class DownloadController implements Runnable {
-    private static final Logger LOGGER = Logger.getLogger("DownloadController");
-    private final Map<SocketChannel, DownloadInfo> downloadInfos  = new ConcurrentHashMap<>();
+    private static final Logger LOGGER = LogManager.getLogger("DownloadController");
+    private final Map<SocketChannel, DownloadInfo> downloadInfos = new ConcurrentHashMap<>();
     private final long INTERVAL = 3000;
 
-    public DownloadController() {
-    }
+    public DownloadController() {    }
 
     public void addDownloadInfo(SocketChannel channel) {
         downloadInfos.put(channel, new DownloadInfo(channel));
+    }
+
+    public void deleteDownloadInfo(SocketChannel channel) {
+        downloadInfos.remove(channel);
     }
 
     public void addBytesRead(SocketChannel channel, long bytesRead) {
@@ -38,7 +43,7 @@ public class DownloadController implements Runnable {
             try {
                 Thread.sleep(INTERVAL);
             } catch (InterruptedException e) {
-                LOGGER.severe("Error in download monitor thread: " + e.getMessage());
+                LOGGER.error("Error in download monitor thread: {}", e.getMessage());
                 Thread.currentThread().interrupt();
             }
         }

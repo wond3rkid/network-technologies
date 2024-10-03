@@ -3,28 +3,26 @@ package network_technologies;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.BitSet;
 
 public class PieceManager {
     private final static Logger LOGGER = LogManager.getLogger();
-    Map<Integer, Boolean> pieces = new HashMap<>();
+    private final BitSet pieces;
     private int sentPieces = 0;
-    private int allPieces;
+    private final int allPieces;
 
     public PieceManager(int count) {
         allPieces = count;
-        for (int i = 0; i < allPieces; i++) {
-            pieces.put(i, false);
-        }
+        pieces = new BitSet(allPieces);
     }
 
     public Integer getPieceToSent() {
-        for (Map.Entry<Integer, Boolean> entry : pieces.entrySet()) {
-            if (!entry.getValue()) {
-                LOGGER.info("Now i will send piece {} ", entry.getKey());
+        for (int i = 0; i < allPieces; i++) {
+            if (!pieces.get(i)) {
+                LOGGER.info("Now i will send piece {} ", i);
                 sentPieces++;
-                return entry.getKey();
+                pieces.set(i);
+                return i;
             }
         }
         LOGGER.info("No piece to sent");

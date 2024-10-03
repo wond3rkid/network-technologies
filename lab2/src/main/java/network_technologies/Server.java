@@ -99,10 +99,26 @@ public class Server implements Runnable {
         fileSize = buffer.getInt();
         key.attach(ServerStatus.WAITING_PIECE);
         LOGGER.info("Client received length: {} for file: {}", fileSize, fileName);
+        key.interestOps(SelectionKey.OP_WRITE);
     }
 
 
-    private void receivePiece(SelectionKey key) {
+    private void receivePiece(SelectionKey key) throws IOException {
         LOGGER.info("Handling piece from the client");
+        SocketChannel channel = (SocketChannel) key.channel();
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        int bytesRead=channel.read(buffer);
+        tracker.addBytesRead(channel, bytesRead);
+        buffer.flip();
+        int pieceLength = buffer.getInt();
+        buffer = ByteBuffer.allocate(pieceLength);
+        bytesRead=channel.read(buffer);
+        if (bytesRead != pieceLength) {
+            LOGGER.error("Error with piece length");
+            throw new IOException("Didn't read all bytes from socket");
+        }
+        tracker.addBytesRead(channel, bytesRead);
+        buffer.flip();
+
     }
 }
