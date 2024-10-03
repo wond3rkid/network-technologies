@@ -27,6 +27,8 @@ public class Server implements Runnable {
     private String fileName;
     private ServerSocket serverStatus;
 
+    // TODO переписать код на потоки!!!!!1
+
     public Server(int port, CountDownLatch latch) {
         Thread trackerTh = new Thread(tracker);
         trackerTh.start();
