@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -24,6 +25,7 @@ public class Server implements Runnable {
     private final DownloadController tracker = new DownloadController();
     private int fileSize;
     private String fileName;
+    private ServerSocket serverStatus;
 
     public Server(int port, CountDownLatch latch) {
         Thread trackerTh = new Thread(tracker);
@@ -62,7 +64,7 @@ public class Server implements Runnable {
         } catch (IOException e) {
             LOGGER.error("Failed from server selector", e);
         }
-        //todo finally to close all resoures
+        // todo finally to close all resoures
     }
 
     private void handleAcceptable() throws IOException {
@@ -70,6 +72,7 @@ public class Server implements Runnable {
         socketChannel.configureBlocking(false);
         socketChannel.register(selector, SelectionKey.OP_READ, ServerStatus.WAITING_INIT_MESSAGE);
         tracker.addDownloadInfo(socketChannel);
+        //
         LOGGER.info("Accepted connection from {}", socketChannel.getRemoteAddress().toString());
     }
 
@@ -98,10 +101,9 @@ public class Server implements Runnable {
         fileName = new String(nameBytes, StandardCharsets.UTF_8).trim();
         fileSize = buffer.getInt();
         key.attach(ServerStatus.WAITING_PIECE);
-        LOGGER.info("Client received length: {} for file: {}", fileSize, fileName);
-        key.interestOps(SelectionKey.OP_WRITE);
+        LOGGER.info("Server received length: {} for file: {}", fileSize, fileName);
+        key.interestOps(SelectionKey.OP_READ);
     }
-
 
     private void receivePiece(SelectionKey key) throws IOException {
         LOGGER.info("Handling piece from the client");
@@ -119,6 +121,12 @@ public class Server implements Runnable {
         }
         tracker.addBytesRead(channel, bytesRead);
         buffer.flip();
-
+        ByteBuffer response = ByteBuffer.allocate(6);
+        response.putInt(2);
+        response.put("OK".getBytes(StandardCharsets.UTF_8));
+        response.flip();
+        channel.write(response);
+        key.attach(ServerStatus.WAITING_PIECE);
+        key.interestOps(SelectionKey.OP_READ);
     }
 }
