@@ -85,6 +85,7 @@ public class FileHandler implements Runnable {
         LOGGER.info("Finished receiving file: {}", fileName);
         ByteBuffer doneResponseBuffer = ByteBuffer.wrap("done".getBytes(StandardCharsets.UTF_8));
         socketChannel.write(doneResponseBuffer);
+        System.exit(0);
     }
 
     private void readDataFromSocket(FileOutputStream fileOutputStream) throws IOException {
