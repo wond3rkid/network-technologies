@@ -4,6 +4,7 @@ import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,7 +12,7 @@ import java.util.concurrent.Executors;
 public class Main {
     private final static Logger LOGGER = LogManager.getLogger("MAIN");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Options options = new Options();
 
         options.addOption("ip", true, "IP address");
